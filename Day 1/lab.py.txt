@@ -1,0 +1,165 @@
+# ============================================================
+# COMPLETE DATA PREPROCESSING PIPELINE
+# Suitable for Classroom Teaching
+# ============================================================
+# -----------------------------
+# STEP 1 : Import Libraries
+# -----------------------------
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import LabelEncoder
+from sklearn.datasets import make_classification
+from imblearn.over_sampling import SMOTE
+from collections import Counter
+
+# -----------------------------
+# STEP 2 : Load Dataset
+# -----------------------------
+print("\nLoading Titanic Dataset...\n")
+df = sns.load_dataset("titanic")
+print(df.head())
+
+# -----------------------------
+# STEP 3 : Basic Information
+# -----------------------------
+
+print("\nDataset Shape")
+print(df.shape)
+
+print("\nColumn Names")
+print(df.columns)
+
+print("\nDataset Information")
+print(df.info())
+
+print("\nStatistical Summary")
+print(df.describe(include='all'))
+
+# -----------------------------
+# STEP 4 : Missing Values
+# -----------------------------
+
+print("\nMissing Values")
+print(df.isnull().sum())
+
+# -----------------------------
+# STEP 5 : Data Cleaning
+# -----------------------------
+
+print("\nRemoving Duplicate Rows")
+df = df.drop_duplicates()
+
+print("Filling Missing Age using Median")
+df['age'] = df['age'].fillna(df['age'].median())
+
+print("Filling Missing Embarked using Mode")
+df['embarked'] = df['embarked'].fillna(df['embarked'].mode()[0])
+
+print("\nRemaining Missing Values")
+print(df.isnull().sum())
+
+# -----------------------------
+# STEP 6 : Exploratory Data Analysis
+# -----------------------------
+
+print("\nCorrelation Matrix")
+print(df.corr(numeric_only=True))
+
+plt.figure(figsize=(6,4))
+sns.histplot(df['age'], bins=20)
+plt.title("Age Distribution")
+plt.show()
+
+plt.figure(figsize=(6,4))
+sns.boxplot(x=df['fare'])
+plt.title("Fare Boxplot")
+plt.show()
+
+plt.figure(figsize=(8,6))
+sns.heatmap(df.corr(numeric_only=True),
+            annot=True,
+            cmap="coolwarm")
+plt.title("Correlation Heatmap")
+plt.show()
+
+# -----------------------------
+# STEP 7 : Encoding
+# -----------------------------
+
+print("\nEncoding Categorical Data")
+
+encoder = LabelEncoder()
+
+df['sex_encoded'] = encoder.fit_transform(df['sex'])
+
+print(df[['sex','sex_encoded']].head())
+
+print("\nOne Hot Encoding")
+
+one_hot = pd.get_dummies(df['embarked'],
+                         prefix='Embarked')
+
+print(one_hot.head())
+
+# -----------------------------
+# STEP 8 : Feature Engineering
+# -----------------------------
+
+print("\nFeature Engineering")
+
+df['Age_Group'] = pd.cut(df['age'],
+                         bins=[0,18,35,60,100],
+                         labels=['Child','Young',
+                                 'Adult','Senior'])
+
+df['Fare_Log'] = df['fare'].apply(
+    lambda x: 0 if x<=0 else __import__("math").log(x)
+)
+
+print(df[['age','Age_Group',
+          'fare','Fare_Log']].head())
+
+# -----------------------------
+# STEP 9 : Loading Another Dataset
+# -----------------------------
+
+print("\nLoading Iris Dataset")
+
+iris = load_iris(as_frame=True)
+
+print(iris.frame.head())
+
+# -----------------------------
+# STEP 10 : Handling Imbalanced Data
+# -----------------------------
+
+print("\nCreating Imbalanced Dataset")
+
+X, y = make_classification(
+    n_samples=500,
+    n_features=10,
+    weights=[0.9,0.1],
+    random_state=42
+)
+
+print("Before SMOTE")
+print(Counter(y))
+
+smote = SMOTE(random_state=42)
+
+X_resampled, y_resampled = smote.fit_resample(X,y)
+
+print("After SMOTE")
+print(Counter(y_resampled))
+
+# -----------------------------
+# STEP 11 : Final Dataset
+# -----------------------------
+
+print("\nFinal Dataset")
+print(df.head())
+
+print("\nPipeline Completed Successfully!")
